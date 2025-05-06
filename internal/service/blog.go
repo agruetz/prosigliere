@@ -27,6 +27,14 @@ func NewBlogService(store datastore.Store) *BlogService {
 
 // Create creates a new blog
 func (s *BlogService) Create(ctx context.Context, req *blogpb.CreateReq) (*blogpb.CreateResp, error) {
+	// Validate inputs
+	if req.GetTitle() == "" {
+		return nil, status.Error(codes.InvalidArgument, "title is required")
+	}
+	if req.GetContent() == "" {
+		return nil, status.Error(codes.InvalidArgument, "content is required")
+	}
+
 	id, err := s.store.Create(ctx, req.GetTitle(), req.GetContent())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create blog: %v", err)
@@ -51,14 +59,18 @@ func (s *BlogService) Get(ctx context.Context, req *blogpb.GetReq) (*blogpb.GetR
 		return nil, status.Errorf(codes.NotFound, "failed to get blog: %v", err)
 	}
 
-	comments := make([]*blogpb.Comment, len(blog.Comments))
+	// Create a slice to hold valid comments
+	comments := make([]*blogpb.Comment, 0, len(blog.Comments))
 	for _, comment := range blog.Comments {
-		comments = append(comments, &blogpb.Comment{
-			Id:        &blogpb.UUID{Value: string(comment.ID)},
-			Content:   comment.Content,
-			Author:    comment.Author,
-			CreatedAt: timestamppb.New(comment.CreatedAt),
-		})
+		// Only add comments with valid IDs
+		if comment.ID != "" {
+			comments = append(comments, &blogpb.Comment{
+				Id:        &blogpb.UUID{Value: string(comment.ID)},
+				Content:   comment.Content,
+				Author:    comment.Author,
+				CreatedAt: timestamppb.New(comment.CreatedAt),
+			})
+		}
 	}
 
 	return &blogpb.GetResp{
@@ -153,6 +165,14 @@ func (s *BlogService) List(ctx context.Context, req *blogpb.ListReq) (*blogpb.Li
 func (s *BlogService) AddComment(ctx context.Context, req *blogpb.AddCommentReq) (*emptypb.Empty, error) {
 	if req.GetId() == nil {
 		return nil, status.Error(codes.InvalidArgument, "blog ID is required")
+	}
+
+	// Validate inputs
+	if req.GetContent() == "" {
+		return nil, status.Error(codes.InvalidArgument, "comment content is required")
+	}
+	if req.GetAuthor() == "" {
+		return nil, status.Error(codes.InvalidArgument, "comment author is required")
 	}
 
 	id := datastore.ID(req.GetId().GetValue())
