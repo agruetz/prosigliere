@@ -48,6 +48,12 @@ func New(opts ...Option) (*Store, error) {
 	return &Store{db: db}, nil
 }
 
+// NewWithDB creates a new PostgreSQL store with the provided database connection
+// This is primarily used for testing
+func NewWithDB(db *sql.DB) *Store {
+	return &Store{db: db}
+}
+
 // WithHost sets the host for the PostgreSQL connection
 func WithHost(host string) Option {
 	return func(c *config) {

@@ -1,6 +1,6 @@
 module prosigliere
 
-go 1.24
+go 1.23
 
 require (
 	github.com/bufbuild/protovalidate-go v0.5.0

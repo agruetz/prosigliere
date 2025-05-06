@@ -185,16 +185,16 @@ func (s *Store) List(ctx context.Context, pageSize int32, pageToken string) ([]*
 }
 
 // AddComment adds a comment to a blog
-func (s *Store) AddComment(ctx context.Context, blogID datastore.ID, content, author string) error {
+func (s *Store) AddComment(ctx context.Context, blogID datastore.ID, content, author string) (datastore.ID, error) {
 	// First check if the blog exists
 	checkQuery := `SELECT 1 FROM blogs WHERE id = $1`
 	var exists int
 	err := s.db.QueryRowContext(ctx, checkQuery, string(blogID)).Scan(&exists)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return fmt.Errorf("blog not found")
+			return "", fmt.Errorf("blog not found")
 		}
-		return fmt.Errorf("failed to check blog existence: %w", err)
+		return "", fmt.Errorf("failed to check blog existence: %w", err)
 	}
 
 	// Insert the comment
@@ -205,8 +205,8 @@ func (s *Store) AddComment(ctx context.Context, blogID datastore.ID, content, au
 	`
 	_, err = s.db.ExecContext(ctx, query, id, string(blogID), content, author)
 	if err != nil {
-		return fmt.Errorf("failed to add comment: %w", err)
+		return "", fmt.Errorf("failed to add comment: %w", err)
 	}
 
-	return nil
+	return datastore.ID(id), nil
 }
