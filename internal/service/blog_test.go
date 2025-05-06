@@ -47,6 +47,30 @@ func TestBlogService_Create(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
+			name: "missing title",
+			req: &blogpb.CreateReq{
+				Content: "This is a test blog content",
+			},
+			setupMock: func(mockStore *mocks.Store) {
+				mockStore.On("Create", mock.Anything, "", "This is a test blog content").
+					Return(datastore.ID(""), errors.New("missing title"))
+			},
+			expectedID:  "",
+			expectedErr: status.Error(codes.Internal, "failed to create blog: missing title"),
+		},
+		{
+			name: "missing content",
+			req: &blogpb.CreateReq{
+				Title: "Test Blog",
+			},
+			setupMock: func(mockStore *mocks.Store) {
+				mockStore.On("Create", mock.Anything, "Test Blog", "").
+					Return(datastore.ID(""), errors.New("missing content"))
+			},
+			expectedID:  "",
+			expectedErr: status.Error(codes.Internal, "failed to create blog: missing content"),
+		},
+		{
 			name: "store error",
 			req: &blogpb.CreateReq{
 				Title:   "Test Blog",
@@ -390,6 +414,28 @@ func TestBlogService_List(t *testing.T) {
 			expectedErr:   nil,
 		},
 		{
+			name: "invalid page size",
+			req:  &blogpb.ListReq{PageSize: -10},
+			setupMock: func(mockStore *mocks.Store) {
+				mockStore.On("List", mock.Anything, int32(10), "").
+					Return(testSummaries, "next-token", nil)
+			},
+			expectedCount: 2,
+			expectedToken: "next-token",
+			expectedErr:   nil,
+		},
+		{
+			name: "invalid page token",
+			req:  &blogpb.ListReq{PageToken: "invalid-token"},
+			setupMock: func(mockStore *mocks.Store) {
+				mockStore.On("List", mock.Anything, int32(10), "invalid-token").
+					Return(nil, "", errors.New("invalid page token"))
+			},
+			expectedCount: 0,
+			expectedToken: "",
+			expectedErr:   status.Error(codes.Internal, "failed to list blogs: invalid page token"),
+		},
+		{
 			name: "store error",
 			req:  &blogpb.ListReq{},
 			setupMock: func(mockStore *mocks.Store) {
@@ -457,6 +503,30 @@ func TestBlogService_AddComment(t *testing.T) {
 				// No mock setup needed
 			},
 			expectedErr: status.Error(codes.InvalidArgument, "blog ID is required"),
+		},
+		{
+			name: "missing Content",
+			req: &blogpb.AddCommentReq{
+				Id:     &blogpb.UUID{Value: "123e4567-e89b-12d3-a456-426614174000"},
+				Author: "Test Author",
+			},
+			setupMock: func(mockStore *mocks.Store) {
+				mockStore.On("AddComment", mock.Anything, datastore.ID("123e4567-e89b-12d3-a456-426614174000"), "", "Test Author").
+					Return(datastore.ID("comment-id"), nil)
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "missing Author",
+			req: &blogpb.AddCommentReq{
+				Id:      &blogpb.UUID{Value: "123e4567-e89b-12d3-a456-426614174000"},
+				Content: "Test comment",
+			},
+			setupMock: func(mockStore *mocks.Store) {
+				mockStore.On("AddComment", mock.Anything, datastore.ID("123e4567-e89b-12d3-a456-426614174000"), "Test comment", "").
+					Return(datastore.ID("comment-id"), nil)
+			},
+			expectedErr: nil,
 		},
 		{
 			name: "store error",
