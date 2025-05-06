@@ -52,11 +52,42 @@ func (s *Store) Get(ctx context.Context, id datastore.ID) (*datastore.Blog, erro
 	blog.CreatedAt = createdAt
 	blog.UpdatedAt = updatedAt
 
-	// Note: In a real implementation with sqlx, we could use StructScan to directly scan into the struct
-	// This would require adding github.com/jmoiron/sqlx as a dependency
+	// Now fetch the comments for this blog
+	commentsQuery := `
+		SELECT id, blog_id, content, author, created_at
+		FROM comments
+		WHERE blog_id = $1
+		ORDER BY created_at
+	`
 
-	// We're not returning comments as the interface doesn't specify it
-	// But we could fetch them if needed
+	rows, err := s.db.QueryContext(ctx, commentsQuery, string(id))
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch comments: %w", err)
+	}
+	defer rows.Close()
+
+	// Initialize the Comments slice
+	blog.Comments = []datastore.Comment{}
+
+	// Iterate through the comments and add them to the blog
+	for rows.Next() {
+		var comment datastore.Comment
+		var commentCreatedAt time.Time
+
+		err = rows.Scan(
+			&comment.ID, &comment.BlogID, &comment.Content, &comment.Author, &commentCreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan comment: %w", err)
+		}
+
+		comment.CreatedAt = commentCreatedAt
+		blog.Comments = append(blog.Comments, comment)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating comments: %w", err)
+	}
 
 	return &blog, nil
 }

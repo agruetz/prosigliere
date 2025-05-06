@@ -91,7 +91,7 @@ func TestGet(t *testing.T) {
 		expected    *datastore.Blog
 	}{
 		{
-			name: "successful retrieval",
+			name: "successful retrieval with comments",
 			id:   datastore.ID("test-id"),
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				testID := datastore.ID("test-id")
@@ -100,18 +100,85 @@ func TestGet(t *testing.T) {
 				testCreatedAt := time.Now()
 				testUpdatedAt := time.Now()
 
-				rows := sqlmock.NewRows([]string{"id", "title", "content", "created_at", "updated_at"}).
+				// Blog rows
+				blogRows := sqlmock.NewRows([]string{"id", "title", "content", "created_at", "updated_at"}).
 					AddRow(testID, testTitle, testContent, testCreatedAt, testUpdatedAt)
 
 				mock.ExpectQuery(`SELECT id, title, content, created_at, updated_at FROM blogs WHERE id = \$1`).
 					WithArgs(string(testID)).
-					WillReturnRows(rows)
+					WillReturnRows(blogRows)
+
+				// Comment rows
+				commentID1 := datastore.ID("comment-id-1")
+				commentID2 := datastore.ID("comment-id-2")
+				commentContent1 := "Comment 1"
+				commentContent2 := "Comment 2"
+				commentAuthor1 := "Author 1"
+				commentAuthor2 := "Author 2"
+				commentCreatedAt1 := time.Now()
+				commentCreatedAt2 := time.Now().Add(time.Hour)
+
+				commentRows := sqlmock.NewRows([]string{"id", "blog_id", "content", "author", "created_at"}).
+					AddRow(commentID1, testID, commentContent1, commentAuthor1, commentCreatedAt1).
+					AddRow(commentID2, testID, commentContent2, commentAuthor2, commentCreatedAt2)
+
+				mock.ExpectQuery(`SELECT id, blog_id, content, author, created_at FROM comments WHERE blog_id = \$1 ORDER BY created_at`).
+					WithArgs(string(testID)).
+					WillReturnRows(commentRows)
 			},
 			expectError: false,
 			expected: &datastore.Blog{
 				ID:      datastore.ID("test-id"),
 				Title:   "Test Title",
 				Content: "Test Content",
+				Comments: []datastore.Comment{
+					{
+						ID:      datastore.ID("comment-id-1"),
+						BlogID:  datastore.ID("test-id"),
+						Content: "Comment 1",
+						Author:  "Author 1",
+					},
+					{
+						ID:      datastore.ID("comment-id-2"),
+						BlogID:  datastore.ID("test-id"),
+						Content: "Comment 2",
+						Author:  "Author 2",
+					},
+				},
+				// CreatedAt and UpdatedAt will be set by the database
+			},
+		},
+		{
+			name: "successful retrieval without comments",
+			id:   datastore.ID("test-id-no-comments"),
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				testID := datastore.ID("test-id-no-comments")
+				testTitle := "Test Title No Comments"
+				testContent := "Test Content No Comments"
+				testCreatedAt := time.Now()
+				testUpdatedAt := time.Now()
+
+				// Blog rows
+				blogRows := sqlmock.NewRows([]string{"id", "title", "content", "created_at", "updated_at"}).
+					AddRow(testID, testTitle, testContent, testCreatedAt, testUpdatedAt)
+
+				mock.ExpectQuery(`SELECT id, title, content, created_at, updated_at FROM blogs WHERE id = \$1`).
+					WithArgs(string(testID)).
+					WillReturnRows(blogRows)
+
+				// Empty comment rows
+				commentRows := sqlmock.NewRows([]string{"id", "blog_id", "content", "author", "created_at"})
+
+				mock.ExpectQuery(`SELECT id, blog_id, content, author, created_at FROM comments WHERE blog_id = \$1 ORDER BY created_at`).
+					WithArgs(string(testID)).
+					WillReturnRows(commentRows)
+			},
+			expectError: false,
+			expected: &datastore.Blog{
+				ID:       datastore.ID("test-id-no-comments"),
+				Title:    "Test Title No Comments",
+				Content:  "Test Content No Comments",
+				Comments: []datastore.Comment{},
 				// CreatedAt and UpdatedAt will be set by the database
 			},
 		},
@@ -136,6 +203,32 @@ func TestGet(t *testing.T) {
 			},
 			expectError: true,
 			errorMsg:    "failed to get blog",
+		},
+		{
+			name: "error fetching comments",
+			id:   datastore.ID("test-id-comment-error"),
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				testID := datastore.ID("test-id-comment-error")
+				testTitle := "Test Title Comment Error"
+				testContent := "Test Content Comment Error"
+				testCreatedAt := time.Now()
+				testUpdatedAt := time.Now()
+
+				// Blog rows
+				blogRows := sqlmock.NewRows([]string{"id", "title", "content", "created_at", "updated_at"}).
+					AddRow(testID, testTitle, testContent, testCreatedAt, testUpdatedAt)
+
+				mock.ExpectQuery(`SELECT id, title, content, created_at, updated_at FROM blogs WHERE id = \$1`).
+					WithArgs(string(testID)).
+					WillReturnRows(blogRows)
+
+				// Error when fetching comments
+				mock.ExpectQuery(`SELECT id, blog_id, content, author, created_at FROM comments WHERE blog_id = \$1 ORDER BY created_at`).
+					WithArgs(string(testID)).
+					WillReturnError(errors.New("failed to fetch comments"))
+			},
+			expectError: true,
+			errorMsg:    "failed to fetch comments",
 		},
 	}
 
@@ -166,6 +259,16 @@ func TestGet(t *testing.T) {
 				assert.Equal(t, tc.expected.ID, blog.ID)
 				assert.Equal(t, tc.expected.Title, blog.Title)
 				assert.Equal(t, tc.expected.Content, blog.Content)
+
+				// Verify comments
+				assert.Equal(t, len(tc.expected.Comments), len(blog.Comments))
+				for i, expectedComment := range tc.expected.Comments {
+					assert.Equal(t, expectedComment.ID, blog.Comments[i].ID)
+					assert.Equal(t, expectedComment.BlogID, blog.Comments[i].BlogID)
+					assert.Equal(t, expectedComment.Content, blog.Comments[i].Content)
+					assert.Equal(t, expectedComment.Author, blog.Comments[i].Author)
+					// Note: We don't check CreatedAt as it's set by the database and might not match exactly
+				}
 			}
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})

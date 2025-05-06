@@ -15,6 +15,7 @@ type Blog struct {
 	Content   string    `db:"content"`
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
+	Comments  []Comment
 }
 
 // Comment represents a comment in the database
