@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: prosigliere-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: blog_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - prosigliere-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Flyway Migrations
+  flyway:
+    image: flyway/flyway:11-alpine
+    container_name: prosigliere-flyway
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./db/migrations:/flyway/sql
+      - ./db/flyway.docker.conf:/flyway/conf/flyway.conf
+    command: migrate
+    networks:
+      - prosigliere-network
+
+  # Server Application
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: prosigliere-server
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+    ports:
+      - "8080:8080"  # HTTP port
+      - "9090:9090"  # gRPC port
+      - "2345:2345"  # Delve debugger port
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=blog_db
+      - DB_SSLMODE=disable
+    restart: unless-stopped
+    networks:
+      - prosigliere-network
+    # Add delve for debugging
+    security_opt:
+      - "seccomp:unconfined"
+    cap_add:
+      - SYS_PTRACE
+
+volumes:
+  postgres-data:
+
+networks:
+  prosigliere-network:
+    driver: bridge

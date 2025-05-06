@@ -97,6 +97,11 @@ db-repair:
 build-server:
 	CGO_ENABLED=0 $(GO) build -o $(SERVER_OUTPUT_DIR)/$(SERVER_BINARY_NAME) $(GO_BUILD_FLAGS) $(SERVER_MAIN_FILE)
 
+# Build the server binary with debug information for Delve
+.PHONY: build-server-debug
+build-server-debug:
+	CGO_ENABLED=1 $(GO) build -gcflags="all=-N -l" -o $(SERVER_OUTPUT_DIR)/$(SERVER_BINARY_NAME) $(SERVER_MAIN_FILE)
+
 # Clean server build artifacts
 .PHONY: clean-server
 clean-server:
@@ -117,6 +122,7 @@ help:
 	@echo "  generate-protos - Generate code from proto files"
 	@echo "  mocks      - Generate mocks for interfaces"
 	@echo "  build-server - Build the server binary"
+	@echo "  build-server-debug - Build the server binary with debug information for Delve"
 	@echo "  lint       - Lint proto files"
 	@echo "  breaking   - Check for breaking changes against main branch"
 	@echo "  clean      - Remove generated files"
