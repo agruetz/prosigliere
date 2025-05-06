@@ -3,6 +3,7 @@
 # Variables
 GO := go
 BUF := $(shell which buf || echo "$(GO) run github.com/bufbuild/buf/cmd/buf")
+FLYWAY := $(shell which flyway || echo "docker run --rm -v $(PWD)/db:/flyway/conf -v $(PWD)/db/migrations:/flyway/sql flyway/flyway")
 
 # Default target
 .PHONY: all
@@ -42,6 +43,24 @@ clean:
 	find ./docs -name "*.json" -delete
 	find ./docs -name "*.swagger.json" -delete
 
+# Database migration targets
+.PHONY: db-migrate db-clean db-info db-validate db-repair
+
+db-migrate:
+	$(FLYWAY) migrate
+
+db-clean:
+	$(FLYWAY) clean
+
+db-info:
+	$(FLYWAY) info
+
+db-validate:
+	$(FLYWAY) validate
+
+db-repair:
+	$(FLYWAY) repair
+
 # Help target
 .PHONY: help
 help:
@@ -52,4 +71,9 @@ help:
 	@echo "  lint       - Lint proto files"
 	@echo "  breaking   - Check for breaking changes against main branch"
 	@echo "  clean      - Remove generated files"
+	@echo "  db-migrate - Run database migrations"
+	@echo "  db-clean   - Clean the database"
+	@echo "  db-info    - Show information about migrations"
+	@echo "  db-validate - Validate applied migrations"
+	@echo "  db-repair  - Repair the schema history table"
 	@echo "  help       - Show this help message"

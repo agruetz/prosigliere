@@ -4,6 +4,7 @@ go 1.24
 
 require (
 	github.com/bufbuild/protovalidate-go v0.5.0
+	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237
 	google.golang.org/grpc v1.62.1

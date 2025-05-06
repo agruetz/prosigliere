@@ -23,6 +23,20 @@ The service is defined using Protocol Buffers (proto3) and includes:
 - [gRPC](https://grpc.io/) - For RPC communication
 - [gRPC-Gateway](https://github.com/grpc-ecosystem/grpc-gateway) - For REST API generation
 - [protovalidate](https://github.com/bufbuild/protovalidate-go) - For field validation
+- [Flyway](https://flywaydb.org/) - For database migrations
+- [PostgreSQL](https://www.postgresql.org/) - Database for storing blogs and comments
+
+## Database
+
+The service uses a PostgreSQL database to store blogs and comments. The database schema is defined in the `db` directory and managed using Flyway migrations.
+
+### Schema Overview
+
+The database schema consists of two main tables:
+- `blogs` - Stores blog posts with title, content, and timestamps
+- `comments` - Stores comments on blog posts with content, author, and timestamps
+
+For more details, see the [database README](db/README.md).
 
 ## Getting Started
 
@@ -40,6 +54,22 @@ The service is defined using Protocol Buffers (proto3) and includes:
    go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
    go install github.com/bufbuild/protovalidate-go/cmd/protoc-gen-validate-go@latest
    ```
+4. Install PostgreSQL or use Docker:
+   ```
+   # For macOS with Homebrew
+   brew install postgresql
+
+   # For Ubuntu/Debian
+   sudo apt-get install postgresql
+   ```
+5. Install Flyway (optional, can use Docker):
+   ```
+   # For macOS with Homebrew
+   brew install flyway
+
+   # For Ubuntu/Debian
+   sudo apt-get install flyway
+   ```
 
 ### Generating Code
 
@@ -55,6 +85,30 @@ This will generate:
 - gRPC-Gateway REST API code
 - Validation code
 - OpenAPI v2 (Swagger) documentation in the `docs` directory
+
+### Setting Up the Database
+
+1. Create a PostgreSQL database:
+   ```
+   createdb blog_db
+
+   # Or using psql
+   psql -U postgres -c "CREATE DATABASE blog_db;"
+   ```
+
+2. Update the database connection details in `db/flyway.conf` if needed:
+   ```
+   flyway.url=jdbc:postgresql://localhost:5432/blog_db
+   flyway.user=postgres
+   flyway.password=postgres
+   ```
+
+3. Run the database migrations:
+   ```
+   make db-migrate
+   ```
+
+For more database commands, see the [database README](db/README.md).
 
 ## API Endpoints
 
