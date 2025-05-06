@@ -9,8 +9,8 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"prosigliere/internal/datastore"
-	blogpb "prosigliere/protos/v1/blog"
+	"github.com/agruetz/prosigliere/internal/datastore"
+	blogpb "github.com/agruetz/prosigliere/protos/v1/blog"
 )
 
 // BlogService implements the blog.v1.BlogsServer interface

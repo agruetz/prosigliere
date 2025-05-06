@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/agruetz/prosigliere/internal/datastore"
 	"github.com/google/uuid"
-	"prosigliere/internal/datastore"
 )
 
 // Create creates a new blog entry
