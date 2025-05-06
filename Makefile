@@ -106,6 +106,16 @@ build-server-debug:
 clean-server:
 	rm -f $(SERVER_OUTPUT_DIR)/$(SERVER_BINARY_NAME)
 
+# Run all unit tests
+.PHONY: test
+test:
+	$(GO) test -v ./... -coverprofile=coverage.out
+
+# Generate HTML coverage report
+.PHONY: coverage
+coverage: test
+	$(GO) tool cover -html=coverage.out -o coverage.html
+
 # Clean generated files
 .PHONY: clean
 clean: clean-server clean-mocks clean-protos
@@ -133,4 +143,6 @@ help:
 	@echo "  db-info    - Show information about migrations"
 	@echo "  db-validate - Validate applied migrations"
 	@echo "  db-repair  - Repair the schema history table"
+	@echo "  test       - Run all unit tests with code coverage"
+	@echo "  coverage   - Generate HTML coverage report from test results"
 	@echo "  help       - Show this help message"

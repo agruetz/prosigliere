@@ -5,14 +5,14 @@ import (
 	"database/sql"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"prosigliere/internal/datastore"
-	"prosigliere/internal/datastore/pg"
+	"github.com/agruetz/prosigliere/internal/datastore"
+	"github.com/agruetz/prosigliere/internal/datastore/pg"
 )
 
 func TestCreate(t *testing.T) {
@@ -97,13 +97,13 @@ func TestGet(t *testing.T) {
 				testID := datastore.ID("test-id")
 				testTitle := "Test Title"
 				testContent := "Test Content"
-				testCreatedAt := sqlmock.AnyArg()
-				testUpdatedAt := sqlmock.AnyArg()
+				testCreatedAt := time.Now()
+				testUpdatedAt := time.Now()
 
 				rows := sqlmock.NewRows([]string{"id", "title", "content", "created_at", "updated_at"}).
 					AddRow(testID, testTitle, testContent, testCreatedAt, testUpdatedAt)
 
-				mock.ExpectQuery("SELECT id, title, content, created_at, updated_at FROM blogs WHERE id = ?").
+				mock.ExpectQuery(`SELECT id, title, content, created_at, updated_at FROM blogs WHERE id = \$1`).
 					WithArgs(string(testID)).
 					WillReturnRows(rows)
 			},
@@ -112,6 +112,7 @@ func TestGet(t *testing.T) {
 				ID:      datastore.ID("test-id"),
 				Title:   "Test Title",
 				Content: "Test Content",
+				// CreatedAt and UpdatedAt will be set by the database
 			},
 		},
 		{
@@ -353,14 +354,14 @@ func TestDelete(t *testing.T) {
 func TestList(t *testing.T) {
 	// Define test cases
 	tests := []struct {
-		name           string
-		pageSize       int32
-		pageToken      string
-		mockSetup      func(mock sqlmock.Sqlmock)
-		expectError    bool
-		errorMsg       string
-		expectedBlogs  []*datastore.BlogSummary
-		nextPageToken  string
+		name          string
+		pageSize      int32
+		pageToken     string
+		mockSetup     func(mock sqlmock.Sqlmock)
+		expectError   bool
+		errorMsg      string
+		expectedBlogs []*datastore.BlogSummary
+		nextPageToken string
 	}{
 		{
 			name:      "successful list without pagination",
@@ -408,8 +409,8 @@ func TestList(t *testing.T) {
 				rows := sqlmock.NewRows([]string{"id", "title", "comment_count"}).
 					AddRow(testID2, testTitle2, commentCount2)
 
-				mock.ExpectQuery("SELECT b.id, b.title, COUNT\\(c.id\\) as comment_count FROM blogs b LEFT JOIN comments c ON b.id = c.blog_id WHERE b.id > ?").
-					WithArgs("test-id-1").
+				mock.ExpectQuery("SELECT b.id, b.title, COUNT\\(c.id\\) as comment_count FROM blogs b LEFT JOIN comments c ON b.id = c.blog_id WHERE b.id > \\$1 GROUP BY b.id, b.title ORDER BY b.id LIMIT \\$2").
+					WithArgs("test-id-1", int32(2)). // pageSize + 1 = 1 + 1 = 2
 					WillReturnRows(rows)
 			},
 			expectError: false,

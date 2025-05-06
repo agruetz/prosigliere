@@ -1,2 +1,6 @@
 .idea/
 server
+
+# Coverage artifacts
+coverage.out
+coverage.html
