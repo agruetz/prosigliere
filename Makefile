@@ -28,7 +28,6 @@ tools:
 	$(GO) install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	$(GO) install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	$(GO) install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
-	$(GO) install github.com/bufbuild/protovalidate-go/cmd/protoc-gen-validate-go@latest
 	$(GO) install github.com/vektra/mockery/v2@latest
 
 # Update protocol buffer dependencies
@@ -48,7 +47,7 @@ proto: update-proto-deps generate-protos
 # Generate mocks
 .PHONY: mocks
 mocks:
-	$(MOCKERY) --dir=internal/datastore --name=Store --output=internal/datastore/mocks --outpkg=mocks --filename=store.go
+	$(GO) generate ./internal/datastore
 
 # Clean mock files
 .PHONY: clean-mocks
@@ -120,7 +119,7 @@ help:
 	@echo "  proto      - Update proto dependencies and generate code from proto files"
 	@echo "  update-proto-deps - Update protocol buffer dependencies"
 	@echo "  generate-protos - Generate code from proto files"
-	@echo "  mocks      - Generate mocks for interfaces"
+	@echo "  mocks      - Generate mocks for interfaces using go generate"
 	@echo "  build-server - Build the server binary"
 	@echo "  build-server-debug - Build the server binary with debug information for Delve"
 	@echo "  lint       - Lint proto files"

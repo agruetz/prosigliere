@@ -5,6 +5,8 @@ import (
 	"context"
 )
 
+//go:generate mockery --name=Store --output=mocks --outpkg=mocks --filename=store.go
+
 // Store defines the interface for blog data operations
 type Store interface {
 	// Create creates a new blog entry
