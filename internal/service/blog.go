@@ -52,6 +52,12 @@ func (s *BlogService) Get(ctx context.Context, req *blogpb.GetReq) (*blogpb.GetR
 		return nil, status.Errorf(codes.NotFound, "failed to get blog: %v", err)
 	}
 
+	// Fetch comments for this blog
+	comments, err := s.getCommentsForBlog(ctx, id)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get comments: %v", err)
+	}
+
 	return &blogpb.GetResp{
 		Blog: &blogpb.Blog{
 			Id: &blogpb.UUID{
@@ -61,10 +67,60 @@ func (s *BlogService) Get(ctx context.Context, req *blogpb.GetReq) (*blogpb.GetR
 			Content:   blog.Content,
 			CreatedAt: timestamppb.New(blog.CreatedAt),
 			UpdatedAt: timestamppb.New(blog.UpdatedAt),
-			// Comments are not included in the datastore.Blog struct
-			// If needed, we could fetch them separately
+			Comments:  comments,
 		},
 	}, nil
+}
+
+// getCommentsForBlog fetches all comments for a blog
+func (s *BlogService) getCommentsForBlog(ctx context.Context, blogID datastore.ID) ([]*blogpb.Comment, error) {
+	// This is a simplified implementation that would normally query the database
+	// In a real implementation, we would add a method to the store interface to get comments for a blog
+
+	// For now, we'll query the database directly to get comments
+	db, ok := s.store.(*datastore.PgStore)
+	if !ok {
+		// If the store is not a PgStore, return an empty list of comments
+		return []*blogpb.Comment{}, nil
+	}
+
+	// Query the database for comments
+	query := `
+		SELECT id, blog_id, content, author, created_at
+		FROM comments
+		WHERE blog_id = $1
+		ORDER BY created_at ASC
+	`
+	rows, err := db.DB().QueryContext(ctx, query, string(blogID))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var comments []*blogpb.Comment
+	for rows.Next() {
+		var id, blogIDStr, content, author string
+		var createdAt time.Time
+		err := rows.Scan(&id, &blogIDStr, &content, &author, &createdAt)
+		if err != nil {
+			return nil, err
+		}
+
+		comments = append(comments, &blogpb.Comment{
+			Id: &blogpb.UUID{
+				Value: id,
+			},
+			Content:   content,
+			Author:    author,
+			CreatedAt: timestamppb.New(createdAt),
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return comments, nil
 }
 
 // Update updates an existing blog

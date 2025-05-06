@@ -1,6 +1,11 @@
 .idea/
-server
+cmd/server/server
 
 # Coverage artifacts
 coverage.out
 coverage.html
+
+# Robot Framework artifacts
+log.html
+output.xml
+report.html

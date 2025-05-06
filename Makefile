@@ -5,6 +5,7 @@ GO := go
 BUF := $(shell which buf || echo "$(GO) run github.com/bufbuild/buf/cmd/buf")
 FLYWAY := $(shell which flyway || echo "docker run --rm -v $(PWD)/db:/flyway/conf -v $(PWD)/db/migrations:/flyway/sql flyway/flyway")
 MOCKERY := $(shell which mockery || echo "$(GO) run github.com/vektra/mockery/v2")
+ROBOT := $(shell which robot || echo "python -m robot")
 
 # Server build variables
 SERVER_BINARY_NAME := server
@@ -29,6 +30,13 @@ tools:
 	$(GO) install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	$(GO) install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
 	$(GO) install github.com/vektra/mockery/v2@latest
+
+# Install Robot Framework and required libraries
+.PHONY: install-robot
+install-robot:
+	pip install robotframework
+	pip install robotframework-requests
+	pip install robotframework-process
 
 # Update protocol buffer dependencies
 .PHONY: update-proto-deps
@@ -116,6 +124,11 @@ test:
 coverage: test
 	$(GO) tool cover -html=coverage.out -o coverage.html
 
+# Run all integration tests with Robot Framework
+.PHONY: integration-test-all
+integration-test-all:
+	$(ROBOT) tests/integration/robot/
+
 # Clean generated files
 .PHONY: clean
 clean: clean-server clean-mocks clean-protos
@@ -145,4 +158,10 @@ help:
 	@echo "  db-repair  - Repair the schema history table"
 	@echo "  test       - Run all unit tests with code coverage"
 	@echo "  coverage   - Generate HTML coverage report from test results"
+	@echo "  install-robot - Install Robot Framework and required libraries"
+	@echo "  integration-test - Run individual integration tests with Robot Framework"
+	@echo "  integration-test-all - Run all integration tests with Robot Framework"
+	@echo "  start-server-for-test - Start the server for integration testing"
+	@echo "  stop-server-for-test - Stop the server after integration testing"
+	@echo "  run-integration-tests - Build server, start it, run tests, and stop server"
 	@echo "  help       - Show this help message"

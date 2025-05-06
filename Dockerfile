@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y ca-certificates
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
 
 # Final stage
-FROM scratch
+FROM golang:1.24
 
 WORKDIR /app
 

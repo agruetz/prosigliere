@@ -156,6 +156,40 @@ Field validation is implemented using buf validate. The following validations ar
 - Comment author: 1-50 characters
 - Page size for listing: 1-100 items
 
+## Testing
+
+### Unit Tests
+
+The project includes unit tests for the service and datastore layers. To run the unit tests:
+
+```
+make test
+```
+
+To generate a coverage report:
+
+```
+make coverage
+```
+
+### Integration Tests
+
+Integration tests are implemented using Robot Framework to test the REST API endpoints. These tests verify that the API works correctly from an external client's perspective.
+
+To run the integration tests:
+
+1. Install Robot Framework and dependencies:
+   ```
+   make install-robot
+   ```
+
+2. Run the tests (this will build the server, start it, run the tests, and stop the server):
+   ```
+   make run-integration-tests
+   ```
+
+For more details about the integration tests, see the [integration tests README](tests/integration/README.md).
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
