@@ -40,6 +40,42 @@ For more details, see the [database README](db/README.md).
 
 ## Getting Started
 
+### Running with Docker Compose
+
+The easiest way to run the entire application stack (PostgreSQL, Flyway migrations, and the server) is using Docker Compose:
+
+1. Make sure you have Docker and Docker Compose installed on your system.
+
+2. Run the following command from the project root:
+   ```
+   docker-compose up
+   ```
+
+   This will:
+   - Start a PostgreSQL database container
+   - Run Flyway migrations to set up the database schema
+   - Build and start the server application
+
+3. To run the services in the background (detached mode):
+   ```
+   docker-compose up -d
+   ```
+
+4. To stop the services:
+   ```
+   docker-compose down
+   ```
+
+5. To stop the services and remove volumes (this will delete all data):
+   ```
+   docker-compose down -v
+   ```
+
+Once running, the services will be available at:
+- REST API: http://localhost:8080
+- gRPC: localhost:9090
+- PostgreSQL: localhost:5432
+- 
 ### Prerequisites
 
 1. Install Go (version 1.24 or later)
