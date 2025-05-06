@@ -1,0 +1,225 @@
+syntax = "proto3";
+
+package blog.v1;
+
+option go_package = "github.com/agruetz/prosigliere/protos/v1/blog";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
+
+// UUID represents a universally unique identifier
+message UUID {
+  // The string representation of the UUID
+  string value = 1 [(buf.validate.field).string = {
+    pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+  }];
+}
+
+// Blog represents a blog with title, content, and comments
+message Blog {
+  // Unique identifier for the blog
+  UUID id = 1;
+
+  // Title of the blog
+  string title = 2 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 100,
+    pattern: "^[\\w\\s\\-\\.,:;!?()]+$"
+  }];
+
+  // Content of the blog
+  string content = 3 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 10000
+  }];
+
+  // Creation timestamp
+  google.protobuf.Timestamp created_at = 4;
+
+  // Last update timestamp
+  google.protobuf.Timestamp updated_at = 5;
+
+  // Comments on the blog
+  repeated Comment comments = 6;
+}
+
+// Comment represents a comment on a blog
+message Comment {
+  // Unique identifier for the comment
+  UUID id = 1;
+
+  // Content of the comment
+  string content = 2 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 1000
+  }];
+
+  // Author of the comment
+  string author = 3 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 50
+  }];
+
+  // Creation timestamp
+  google.protobuf.Timestamp created_at = 4;
+}
+
+// Request to create a new blog
+message CreateReq {
+  // Title of the blog post
+  string title = 1 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 100,
+    pattern: "^[\\w\\s\\-\\.,:;!?()]+$"
+  }];
+
+  // Content of the blog post
+  string content = 2 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 10000
+  }];
+}
+
+// Response for creating a blog
+message CreateResp {
+  // Unique identifier for the created blog
+  UUID id = 1;
+}
+
+// Request to get a blog by ID
+message GetReq {
+  // ID of the blog to retrieve
+  UUID id = 1;
+}
+
+// Response for getting a blog
+message GetResp {
+  // The retrieved blog
+  Blog blog = 1;
+}
+
+// Request to update a blog
+message UpdateReq {
+  // ID of the blog to update
+  UUID id = 1;
+
+  // New title for the blog (optional)
+  optional string title = 2 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 100,
+    pattern: "^[\\w\\s\\-\\.,:;!?()]+$"
+  }];
+
+  // New content for the blog (optional)
+  optional string content = 3 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 10000
+  }];
+}
+
+// Request to delete a blog
+message DeleteReq {
+  // ID of the blog to delete
+  UUID id = 1;
+}
+
+// Request to list blogs with pagination
+message ListReq {
+  // Maximum number of blogs to return
+  int32 page_size = 1 [(buf.validate.field).int32 = {
+    gt: 0,
+    lte: 100
+  }];
+
+  // Token for pagination
+  string page_token = 2;
+}
+
+// Response for listing blogs with their titles and comment counts
+message ListResp {
+  // List of blog entries with title and comment count
+  repeated BlogSummary blogs = 1;
+
+  // Token for retrieving the next page
+  string next_page_token = 2;
+}
+
+// Summary of a blog containing title and comment count
+message BlogSummary {
+  // ID of the blog
+  UUID id = 1;
+
+  // Title of the blog
+  string title = 2;
+
+  // Number of comments on the blog
+  int32 comment_count = 3;
+}
+
+// Request to add a comment to a blog
+message AddCommentReq {
+  // ID of the blog to comment on
+  UUID id = 1;
+
+  // Content of the comment
+  string content = 2 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 1000
+  }];
+
+  // Author of the comment
+  string author = 3 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 50
+  }];
+}
+
+// BlogService provides operations for managing blogs
+service Blogs {
+  // Create creates a new blog
+  rpc Create(CreateReq) returns (CreateResp) {
+    option (google.api.http) = {
+      post: "/v1/posts"
+      body: "*"
+    };
+  }
+
+  // Get retrieves a blog by ID
+  rpc Get(GetReq) returns (GetResp) {
+    option (google.api.http) = {
+      get: "/v1/posts/{id.value}"
+    };
+  }
+
+  // Update updates an existing blog
+  rpc Update(UpdateReq) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      patch: "/v1/posts/{id.value}"
+      body: "*"
+    };
+  }
+
+  // Delete deletes a blog
+  rpc Delete(DeleteReq) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1/posts/{id.value}"
+    };
+  }
+
+  // List lists blogs with pagination
+  rpc List(ListReq) returns (ListResp) {
+    option (google.api.http) = {
+      get: "/v1/posts"
+    };
+  }
+
+  // AddComment adds a comment to a blog
+  rpc AddComment(AddCommentReq) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/v1/posts/{id.value}/comment"
+      body: "*"
+    };
+  }
+}

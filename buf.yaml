@@ -1,0 +1,11 @@
+version: v1
+name: buf.build/prosigliere/blog
+deps:
+  - buf.build/googleapis/googleapis
+  - buf.build/bufbuild/protovalidate
+lint:
+  use:
+    - STANDARD
+breaking:
+  use:
+    - FILE
