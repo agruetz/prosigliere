@@ -54,6 +54,7 @@ This will generate:
 - gRPC server and client code
 - gRPC-Gateway REST API code
 - Validation code
+- OpenAPI v2 (Swagger) documentation in the `docs` directory
 
 ## API Endpoints
 
@@ -79,6 +80,17 @@ The REST API is generated from the gRPC service using gRPC-Gateway annotations:
 | DELETE      | /v1/posts/{id}                | Delete a blog              |
 | GET         | /v1/posts                     | List blogs                 |
 | POST        | /v1/posts/{post_id}/comments  | Add a comment to a blog    |
+
+## API Documentation
+
+OpenAPI v2 (Swagger) documentation is automatically generated in the `docs` directory when running `buf generate`. The documentation provides a detailed description of all API endpoints, request/response schemas, and available operations.
+
+The generated documentation can be found at:
+```
+docs/protos/blog/v1/blog.swagger.json
+```
+
+This Swagger JSON file can be used with tools like [Swagger UI](https://swagger.io/tools/swagger-ui/) to visualize and interact with the API.
 
 ## Validation
 

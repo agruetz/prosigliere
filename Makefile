@@ -39,6 +39,8 @@ clean:
 	find . -name "*.pb.go" -delete
 	find . -name "*.pb.validate.go" -delete
 	find . -name "*.pb.gw.go" -delete
+	find ./docs -name "*.json" -delete
+	find ./docs -name "*.swagger.json" -delete
 
 # Help target
 .PHONY: help

@@ -1,0 +1,440 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "protos/blog/v1/blog.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "Blogs"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/posts": {
+      "get": {
+        "summary": "List lists blogs with pagination",
+        "operationId": "Blogs_List",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pageSize",
+            "description": "Maximum number of blogs to return",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageToken",
+            "description": "Token for pagination",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Blogs"
+        ]
+      },
+      "post": {
+        "summary": "Create creates a new blog",
+        "operationId": "Blogs_Create",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateReq"
+            }
+          }
+        ],
+        "tags": [
+          "Blogs"
+        ]
+      }
+    },
+    "/v1/posts/{id.value}": {
+      "get": {
+        "summary": "Get retrieves a blog by ID",
+        "operationId": "Blogs_Get",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id.value",
+            "description": "The string representation of the UUID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Blogs"
+        ]
+      },
+      "delete": {
+        "summary": "Delete deletes a blog",
+        "operationId": "Blogs_Delete",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id.value",
+            "description": "The string representation of the UUID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Blogs"
+        ]
+      },
+      "patch": {
+        "summary": "Update updates an existing blog",
+        "operationId": "Blogs_Update",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id.value",
+            "description": "The string representation of the UUID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BlogsUpdateBody"
+            }
+          }
+        ],
+        "tags": [
+          "Blogs"
+        ]
+      }
+    },
+    "/v1/posts/{id.value}/comment": {
+      "post": {
+        "summary": "AddComment adds a comment to a blog",
+        "operationId": "Blogs_AddComment",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id.value",
+            "description": "The string representation of the UUID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BlogsAddCommentBody"
+            }
+          }
+        ],
+        "tags": [
+          "Blogs"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "BlogsAddCommentBody": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "object",
+          "title": "ID of the blog to comment on"
+        },
+        "content": {
+          "type": "string",
+          "title": "Content of the comment"
+        },
+        "author": {
+          "type": "string",
+          "title": "Author of the comment"
+        }
+      },
+      "title": "Request to add a comment to a blog"
+    },
+    "BlogsUpdateBody": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "object",
+          "title": "ID of the blog to update"
+        },
+        "title": {
+          "type": "string",
+          "title": "New title for the blog (optional)"
+        },
+        "content": {
+          "type": "string",
+          "title": "New content for the blog (optional)"
+        }
+      },
+      "title": "Request to update a blog"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1Blog": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/v1UUID",
+          "title": "Unique identifier for the blog"
+        },
+        "title": {
+          "type": "string",
+          "title": "Title of the blog"
+        },
+        "content": {
+          "type": "string",
+          "title": "Content of the blog"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Last update timestamp"
+        },
+        "comments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Comment"
+          },
+          "title": "Comments on the blog"
+        }
+      },
+      "title": "Blog represents a blog with title, content, and comments"
+    },
+    "v1BlogSummary": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/v1UUID",
+          "title": "ID of the blog"
+        },
+        "title": {
+          "type": "string",
+          "title": "Title of the blog"
+        },
+        "commentCount": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of comments on the blog"
+        }
+      },
+      "title": "Summary of a blog containing title and comment count"
+    },
+    "v1Comment": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/v1UUID",
+          "title": "Unique identifier for the comment"
+        },
+        "content": {
+          "type": "string",
+          "title": "Content of the comment"
+        },
+        "author": {
+          "type": "string",
+          "title": "Author of the comment"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Creation timestamp"
+        }
+      },
+      "title": "Comment represents a comment on a blog"
+    },
+    "v1CreateReq": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "title": "Title of the blog post"
+        },
+        "content": {
+          "type": "string",
+          "title": "Content of the blog post"
+        }
+      },
+      "title": "Request to create a new blog"
+    },
+    "v1CreateResp": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/v1UUID",
+          "title": "Unique identifier for the created blog"
+        }
+      },
+      "title": "Response for creating a blog"
+    },
+    "v1GetResp": {
+      "type": "object",
+      "properties": {
+        "blog": {
+          "$ref": "#/definitions/v1Blog",
+          "title": "The retrieved blog"
+        }
+      },
+      "title": "Response for getting a blog"
+    },
+    "v1ListResp": {
+      "type": "object",
+      "properties": {
+        "blogs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1BlogSummary"
+          },
+          "title": "List of blog entries with title and comment count"
+        },
+        "nextPageToken": {
+          "type": "string",
+          "title": "Token for retrieving the next page"
+        }
+      },
+      "title": "Response for listing blogs with their titles and comment counts"
+    },
+    "v1UUID": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "title": "The string representation of the UUID"
+        }
+      },
+      "title": "UUID represents a universally unique identifier"
+    }
+  }
+}

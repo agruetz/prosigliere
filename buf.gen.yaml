@@ -16,3 +16,7 @@ plugins:
     out: ./protos
     opt:
       - module=github.com/agruetz/prosigliere/protos
+  - plugin: buf.build/grpc-ecosystem/openapiv2
+    out: ./docs
+    opt:
+      - logtostderr=true
